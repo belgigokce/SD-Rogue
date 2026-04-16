@@ -20,7 +20,7 @@ namespace RlGameNS;
 // A dungeon level is a collection or rooms and tunnels in a 78x25 grid. 
 // each tile is at a point, or grid location, represented by a Vector2. 
 // 
-// *TileSets* are HashSets of grid points, TileSets can be used to tell 
+// *TileSets* are HashSets of grid points, TileSets can be used to tell
 // GameScreen what tiles to draw. TileSets can be combined with Union and 
 // Intersect to create complex tile sets.
 // -----------------------------------------------------------------------
@@ -32,6 +32,8 @@ public class Level : Scene {
     // --- Tile Registry (The Bridge) ---
     // This Dictionary maps coordinates to actual Tile objects
     protected Dictionary<Vector2, Tile> _tileRegistry = new Dictionary<Vector2, Tile>();
+    
+    protected List<Item> _items = new List<Item>();
 
 
     // --- Tile Sets -----
@@ -52,8 +54,11 @@ public class Level : Scene {
       _player.Pos = new Vector2(4, 12); // random, or at stairs
       _map        = map;
       _game       = game;
-
+      Random rng = new Random();
+      int itemCount = rng.Next(1, 5);
+         
       initMapTileSets(map);
+      SpawnItems(itemCount);
       updateDiscovered();
       registerCommandsWithScene();
    }
@@ -115,7 +120,16 @@ public class Level : Scene {
 
 // -------------------------------------------------------------------------
 
-   private void drawItems(IRenderWindow disp) { }
+   private void drawItems(IRenderWindow disp) 
+   { 
+      foreach (var item in _items)
+      {
+         if (_inFov.Contains(item.Pos))
+         {
+            item.Draw(disp);
+         }
+      }
+   }
 
    private void drawEnemies(IRenderWindow disp) { }
 
@@ -242,6 +256,32 @@ public class Level : Scene {
          }
 
          updateDiscovered();
+      }
+   }
+   
+   private void SpawnItems(int count)
+   {
+      Random rng = new Random();
+      
+      List<Vector2> validSpots = _floor.ToList(); 
+
+      for (int i = 0; i < count; i++)
+      {
+         if (validSpots.Count == 0) break;
+
+         int index = rng.Next(validSpots.Count);
+         Vector2 spawnPos = validSpots[index];
+         
+         validSpots.RemoveAt(index); 
+         
+         if (rng.Next(2) == 0)
+         {
+            _items.Add(new Gold(i, spawnPos, rng.Next(10, 50))); 
+         }
+         else
+         {
+            _items.Add(new Armour(i, spawnPos, rng.Next(1, 5))); 
+         }
       }
    }
 
