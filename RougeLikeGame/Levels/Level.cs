@@ -1,194 +1,224 @@
-using RogueLib.Dungeon;
 using RogueLib.Engine;
+using RogueLib.Dungeon;
 using RogueLib.Utilities;
 using TileSet = System.Collections.Generic.HashSet<RogueLib.Utilities.Vector2>;
 
 namespace RlGameNS;
 
-// -----------------------------------------------------------------------
-// The Level is the model, all the game world objects live in the model. 
-// player input updates the model, the model updates the view, and the 
-// controller runs the whole thing. 
-//
-// Scene is the base class for all game scenes (levels). Scene is an 
-// abstract class that implements IDrawable and ICommandable. 
-// 
-// A dungeon level is a collection or rooms and tunnels in a 78x25 grid. 
-// each tile is at a point, or grid location, represented by a Vector2. 
-// 
-// *TileSets* are HashSets of grid points, TileSets can be used to tell 
-// GameScreen what tiles to draw. TileSets can be combined with Union and 
-// Intersect to create complex tile sets.
-// -----------------------------------------------------------------------
-public class Level : Scene {
-   // ---- level config ---- 
-   protected string? _map;
-   protected int     _senseRadius = 4;
+public class Level : Scene
+{
+    protected string? _map;
+    protected int _senseRadius = 4;
 
-   // --- Tile Sets -----
-   // used to keep track of state of tiles on the map
-   protected TileSet _walkables; // walkable tiles 
-   protected TileSet _floor;
-   protected TileSet _tunnel;
-   protected TileSet _door;
-   protected TileSet _decor; // walls and other decorations, always visible once discovered
+    protected TileSet _walkables;
+    protected TileSet _floor;
+    protected TileSet _tunnel;
+    protected TileSet _door;
+    protected TileSet _decor;
+    protected TileSet _discovered;
+    protected TileSet _inFov;
 
-   protected TileSet _discovered; // tiles the player has seen
-   protected TileSet _inFov;      // current fov of player
+    // Vans: Factory Pattern — enemies are created through EnemyFactory, not with 'new' directly
+    private List<Enemy> _enemies = new();
+    private EnemyFactory _factory = new();
+    private int _difficulty = 1;
 
-   public Level(Player p, string map, Game game) {
-      if (game == null || p == null || map == null)
-         throw new ArgumentNullException("game, player, or map cannot be null");
+    // Vans: Observer Pattern — singleton UIManager watches all enemies for combat events
+    private UIManager _ui = UIManager.Instance;
 
-      _player     = p;
-      _player.Pos = new Vector2(4, 12); // random, or at stairs
-      _map        = map;
-      _game       = _game;
+    public Level(Player p, string map, Game game)
+    {
+        if (game == null || p == null || map == null)
+            throw new ArgumentNullException("game, player, or map cannot be null");
 
-      initMapTileSets(map);
-      updateDiscovered();
-      registerCommandsWithScene();
-   }
+        _player = p;
+        _player.Pos = new Vector2(4, 12);
+        _map = map;
+        _game = game;   // Vans: Fixed original bug — was "_game = _game" (assigned to itself)
 
-   protected void updateDiscovered() {
-      _inFov = fovCalc(_player!.Pos, _senseRadius);
+        initMapTileSets(map);
+        updateDiscovered();
+        registerCommandsWithScene();
+    }
 
-      if (_discovered is null)
-         _discovered = new TileSet();
+    protected void updateDiscovered()
+    {
+        _inFov = fovCalc(_player!.Pos, _senseRadius);
+        if (_discovered is null)
+            _discovered = new TileSet();
+        _discovered.UnionWith(_inFov);
+    }
 
-      _discovered.UnionWith(_inFov);
-   }
+    protected TileSet fovCalc(Vector2 pos, int sens)
+        => Vector2.getAllTiles().Where(t => (pos - t).RookLength < sens).ToHashSet();
 
-   protected TileSet fovCalc(Vector2 pos, int sens)
-      => Vector2.getAllTiles().Where(t => (pos - t).RookLength < sens).ToHashSet();
+    public override void Update()
+    {
+        _player!.Update();
 
-   // -----------------------------------------------------------------------
-   public override void Update() {
-      _player!.Update();
-      // foreach item update
-      // foreach NPC update 
-      // check for player death -- on death build RIP message
-   }
+        // Vans: Each enemy takes its turn after the player
+        foreach (var enemy in _enemies)
+            enemy.Update();
+    }
 
-   public override void Draw(IRenderWindow? disp) {
-      // using custom RenderWindow, cast to my RenderWindow
-      var tilesToDraw = new TileSet(_decor);
-      tilesToDraw.IntersectWith(_discovered);
-      tilesToDraw.UnionWith(_inFov);
+    public override void Draw(IRenderWindow? disp)
+    {
+        var tilesToDraw = new TileSet(_decor);
+        tilesToDraw.IntersectWith(_discovered);
+        tilesToDraw.UnionWith(_inFov);
 
-      disp.fDraw(tilesToDraw, _map, ConsoleColor.Gray);
+        disp.fDraw(tilesToDraw, _map, ConsoleColor.Gray);
 
-      var rng = new Random();
-      if (_player.Turn % 5 == 0)
-         _player._color = (ConsoleColor)rng.Next(10, 16);
-      _player!.Draw(disp);
-      // disp.Draw(_player!.Glyph, _player!.Pos, ConsoleColor.Cyan);
+        var rng = new Random();
+        if (_player.Turn % 5 == 0)
+            _player._color = (ConsoleColor)rng.Next(10, 16);
 
-      drawItems(disp);
-      drawEnemies(disp);
-      disp.Draw(_player.HUD, new Vector2(0, 24), ConsoleColor.Green);
-   }
+        _player!.Draw(disp);
+        drawItems(disp);
+        drawEnemies(disp);
+        disp.Draw(_player.HUD, new Vector2(0, 24), ConsoleColor.Green);
+    }
 
-   public override void DoCommand(Command command) {
-      // player ctl  
-      if (command.Name == "up") {
-         MovePlayer(Vector2.N);
-      } else if (command.Name == "down") {
-         MovePlayer(Vector2.S);
-      } else if (command.Name == "left") {
-         MovePlayer(Vector2.W);
-      } else if (command.Name == "right") {
-         MovePlayer(Vector2.E);
-      } // game ctl      
-      else if (command.Name == "quit") {
-         _levelActive = false;
-      }
-   }
+    public override void DoCommand(Command command)
+    {
+        if (command.Name == "up") MovePlayer(Vector2.N);
+        else if (command.Name == "down") MovePlayer(Vector2.S);
+        else if (command.Name == "left") MovePlayer(Vector2.W);
+        else if (command.Name == "right") MovePlayer(Vector2.E);
+        else if (command.Name == "quit") _levelActive = false;
+        // Vans: Space bar triggers adjacent melee / ranged / magic attack via Strategy Pattern
+        else if (command.Name == "attack") AttackNearestEnemy();
+    }
 
-// -------------------------------------------------------------------------
+    private void drawItems(IRenderWindow disp) { }
 
-   private void drawItems(IRenderWindow disp) { }
+    private void drawEnemies(IRenderWindow disp)
+    {
+        foreach (var enemy in _enemies)
+        {
+            // Vans: Only render enemies inside the player's field of view
+            if (_inFov.Contains(enemy.Pos))
+                enemy.Draw(disp);
+        }
+        // Vans: Let UIManager draw its pending combat message (Observer Pattern output)
+        _ui.Draw(disp);
+    }
 
-   private void drawEnemies(IRenderWindow disp) { }
+    private void initMapTileSets(string map)
+    {
+        _floor = new TileSet();
+        _tunnel = new TileSet();
+        _door = new TileSet();
+        _decor = new TileSet();
 
-   private void initMapTileSets(string map) {
-      var lines = map.Split('\n');
+        foreach (var (c, p) in Vector2.Parse(map))
+        {
+            if (c == '.') _floor.Add(p);
+            else if (c == '+') _door.Add(p);
+            else if (c == '#') _tunnel.Add(p);
+            else if (c != ' ') _decor.Add(p);
+        }
 
-      // ------ rules for map ------
-      // . - floor, walkable and transparent.
-      // + - door, walkable and transparent // # - tunnel, walkable and transparent
-      // ' ' - solid stone, not walkable, not transparent.
-      // '|' - wall, not walkable, not transparent, but discoverable.'
-      //  others are treated the same as wall.
-      // tunnel, wall, and doorways are decor, once discovered they are visible.
+        _walkables = _floor.Union(_tunnel).Union(_door).ToHashSet();
+    }
 
-      _floor  = new TileSet();
-      _tunnel = new TileSet();
-      _door   = new TileSet();
-      _decor  = new TileSet();
+    private void registerCommandsWithScene()
+    {
+        // Vans: Spawn enemies first so _walkables is ready for placement
+        spawnEnemies();
 
-      foreach (var (c, p) in Vector2.Parse(map)) {
-         if (c == '.') _floor.Add(p);
-         else if (c == '+') _door.Add(p);
-         else if (c == '#') _tunnel.Add(p);
-         else if (c != ' ') _decor.Add(p);
-      }
+        RegisterCommand(ConsoleKey.UpArrow, "up");
+        RegisterCommand(ConsoleKey.W, "up");
+        RegisterCommand(ConsoleKey.K, "up");
 
-      _walkables = _floor.Union(_tunnel).Union(_door).ToHashSet();
+        RegisterCommand(ConsoleKey.DownArrow, "down");
+        RegisterCommand(ConsoleKey.S, "down");
+        RegisterCommand(ConsoleKey.J, "down");
 
-//      for (int row = 0; row < lines.Length; ++row) {
-//         for (int col = 0; col < lines[row].Length; ++col) {
-//            char tile = lines[row][col];
-//
-//            if (tile == '.' || tile == '+' || tile == '#') {
-//               _walkables.Add(new Vector2(col, row));
-//               _decor.Add(new Vector2(col, row));
-//            } else if (tile != ' ') {
-//               _decor.Add(new Vector2(col, row));
-//            }
-//         }
-//      }
-   }
+        RegisterCommand(ConsoleKey.LeftArrow, "left");   // Vans: Fixed — was DownArrow
+        RegisterCommand(ConsoleKey.A, "left");
+        RegisterCommand(ConsoleKey.H, "left");
 
-// ------------------------------------------------------
-// Commands 
-// ------------------------------------------------------
+        RegisterCommand(ConsoleKey.RightArrow, "right");  // Vans: Fixed — was DownArrow
+        RegisterCommand(ConsoleKey.D, "right");
+        RegisterCommand(ConsoleKey.L, "right");
 
+        RegisterCommand(ConsoleKey.Q, "quit");
 
-   private void registerCommandsWithScene() {
-      RegisterCommand(ConsoleKey.UpArrow, "up");
-      RegisterCommand(ConsoleKey.W, "up");
-      RegisterCommand(ConsoleKey.K, "up");
+        // Vans: Space triggers attack command — wired to Strategy Pattern via AttackNearestEnemy()
+        RegisterCommand(ConsoleKey.Spacebar, "attack");
+    }
 
-      RegisterCommand(ConsoleKey.DownArrow, "down");
-      RegisterCommand(ConsoleKey.S, "down");
-      RegisterCommand(ConsoleKey.J, "down");
+    public void MovePlayer(Vector2 delta)
+    {
+        var newPos = _player!.Pos + delta;
+        if (_walkables.Contains(newPos))
+        {
+            var oldPos = _player!.Pos;
+            _player!.Pos = newPos;
+            _walkables.Remove(newPos);
+            _walkables.Add(oldPos);
+            updateDiscovered();
+        }
+    }
 
-      RegisterCommand(ConsoleKey.DownArrow, "left");
-      RegisterCommand(ConsoleKey.A, "left");
-      RegisterCommand(ConsoleKey.H, "left");
+    public void QuitLevel() => _levelActive = false;
 
-      RegisterCommand(ConsoleKey.DownArrow, "right");
-      RegisterCommand(ConsoleKey.D, "right");
-      RegisterCommand(ConsoleKey.L, "right");
+    // Vans: Factory Pattern — EnemyFactory creates each enemy; we just place and register them
+    private void spawnEnemies()
+    {
+        string[] spawnList = { "goblin", "goblin", "orc", "goblin", "troll" };
+        var walkableList = _walkables.ToList();
+        var rng = new Random();
 
-      RegisterCommand(ConsoleKey.Q, "quit");
-   }
+        foreach (var type in spawnList)
+        {
+            var enemy = _factory.CreateEnemy(type, _difficulty);
 
+            // Vans: Pick a random walkable tile that isn't already occupied
+            if (walkableList.Count > 0)
+            {
+                int idx = rng.Next(walkableList.Count);
+                enemy.Pos = walkableList[idx];
+                walkableList.RemoveAt(idx);
+            }
 
-   public void MovePlayer(Vector2 delta) {
-      var newPos = _player!.Pos + delta;
+            // Vans: Observer Pattern — UIManager subscribes to every enemy's events
+            enemy.RegisterObserver(_ui);
+            _enemies.Add(enemy);
+        }
+    }
 
-      if (_walkables.Contains(newPos)) {
-         var oldPos = _player!.Pos;
-         _player!.Pos = newPos;
-         _walkables.Remove(newPos); // new tile is now occupied
-         _walkables.Add(oldPos);    // old tile is now free
-         updateDiscovered();
-      }
-   }
+    // Vans: Strategy Pattern in action — damage calculation is delegated to _attackStrategy
+    private void AttackNearestEnemy()
+    {
+        var adjacent = new[] { Vector2.N, Vector2.S, Vector2.E, Vector2.W };
 
-   public void QuitLevel() {
-      _levelActive = false;
-   }
+        foreach (var dir in adjacent)
+        {
+            var checkPos = _player!.Pos + dir;
+            var enemy = _enemies.FirstOrDefault(e => e.Pos == checkPos);
+
+            if (enemy != null)
+            {
+                // Vans: Player's current AttackStrategy decides how much damage is dealt
+                int dmg = _player.AttackEnemy(enemy);
+                _ui.DisplayMessage($"You hit for {dmg} damage!");
+                RemoveIfDead(enemy);
+                return;
+            }
+        }
+        _ui.DisplayMessage("Nothing to attack nearby.");
+    }
+
+    // Vans: Clean up dead enemies and award XP via the Observer
+    private void RemoveIfDead(Enemy enemy)
+    {
+        if (enemy.GetHealth() <= 0)
+        {
+            _enemies.Remove(enemy);
+            // Vans: Broadcast "enemyDied" so UIManager shows the XP message
+            _ui.Update("enemyDied", 25);
+        }
+    }
 }

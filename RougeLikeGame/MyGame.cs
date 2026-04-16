@@ -18,8 +18,12 @@ public class MyGame : Game {
       _window       = new ScreenBuff();
       _player       = new Rogue();
       _currentLevel = new Level(_player, map1, this);
-      
-   }
+
+        // Observer: UIManager is already a singleton wired up inside Level.
+        // Demo: show player which strategy they're using at game start.
+        UIManager.Instance.DisplayMessage("Welcome! [Space] to attack, [Q] to quit.");
+
+    }
 
    public MyGame() {
       // init level on construction 
