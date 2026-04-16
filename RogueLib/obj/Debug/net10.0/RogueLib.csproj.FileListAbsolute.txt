@@ -10,3 +10,11 @@ C:\Users\laksh\OneDrive\Documents\Rogue poroject\SD-Rogue\RogueLib\obj\Debug\net
 C:\Users\laksh\OneDrive\Documents\Rogue poroject\SD-Rogue\RogueLib\obj\Debug\net10.0\refint\RogueLib.dll
 C:\Users\laksh\OneDrive\Documents\Rogue poroject\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.pdb
 C:\Users\laksh\OneDrive\Documents\Rogue poroject\SD-Rogue\RogueLib\obj\Debug\net10.0\ref\RogueLib.dll
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.AssemblyInfoInputs.cache
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.AssemblyInfo.cs
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.csproj.CoreCompileInputs.cache
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.sourcelink.json
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.dll
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\refint\RogueLib.dll
+C:\Users\belgi\NBCC\OOP\PROJECT\SD-Rogue\RogueLib\obj\Debug\net10.0\RogueLib.pdb

@@ -1,3 +1,4 @@
+using System;
 using RogueLib.Engine;
 using RogueLib.Utilities;
 using CommandMap = System.Collections.Generic.Dictionary<System.ConsoleKey, string>;
@@ -32,6 +33,6 @@ public abstract class Scene : ICommandable, IDrawable {
    // Constructor -----------------------------------------------------
    public Scene()
    {
-      _commandMap = new();
-   }
+      _commandMap = new CommandMap();// Explicitly create the dictionary
+    }
 }
