@@ -5,18 +5,18 @@ namespace RogueLib.Dungeon.Tiles
 {
     public class DoorTile : Tile
     {
-        private bool _isOpen;
+        public bool IsOpen;
 
         public DoorTile(int id) : base(id)
         {
-            _isOpen = false;
-            _isWalkable = false; // Doors are usually closed blocks at first
+            IsOpen = false;
+            IsWalkable = false; // Doors are usually closed blocks at first
         }
 
         public void Open()
         {
-            _isOpen = true;
-            _isWalkable = true;
+            IsOpen = true;
+            IsWalkable = true;
         }
 
         // Notice: We don't HAVE to write GetTileSpace here anymore!

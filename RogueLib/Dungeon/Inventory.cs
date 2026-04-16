@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using RogueLib.Dungeon;
 
 public class Inventory
 {

@@ -8,36 +8,28 @@
     "net10.0": []
   },
   "packageFolders": {
-    "C:\\Users\\laksh\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "/Users/bdonaher/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\laksh\\OneDrive\\Documents\\Rogue poroject\\SD-Rogue\\RogueLib\\RogueLib.csproj",
+      "projectUniqueName": "/Users/bdonaher/src/PROG1338A/Rogue Project/SD-Rogue/RogueLib/RogueLib.csproj",
       "projectName": "RogueLib",
-      "projectPath": "C:\\Users\\laksh\\OneDrive\\Documents\\Rogue poroject\\SD-Rogue\\RogueLib\\RogueLib.csproj",
-      "packagesPath": "C:\\Users\\laksh\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\laksh\\OneDrive\\Documents\\Rogue poroject\\SD-Rogue\\RogueLib\\obj\\",
+      "projectPath": "/Users/bdonaher/src/PROG1338A/Rogue Project/SD-Rogue/RogueLib/RogueLib.csproj",
+      "packagesPath": "/Users/bdonaher/.nuget/packages/",
+      "outputPath": "/Users/bdonaher/src/PROG1338A/Rogue Project/SD-Rogue/RogueLib/obj/",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\laksh\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/Users/bdonaher/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net10.0": {
-          "framework": "net10.0",
           "targetAlias": "net10.0",
           "projectReferences": {}
         }
@@ -56,7 +48,6 @@
     },
     "frameworks": {
       "net10.0": {
-        "framework": "net10.0",
         "targetAlias": "net10.0",
         "imports": [
           "net461",
@@ -74,7 +65,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
         "packagesToPrune": {
           "Microsoft.CSharp": "(,4.7.32767]",
           "Microsoft.VisualBasic": "(,10.4.32767]",

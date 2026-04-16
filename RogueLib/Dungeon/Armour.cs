@@ -1,14 +1,19 @@
 ﻿using System;
+using RogueLib.Dungeon;
 using RogueLib.Utilities;
+using RogueLib.Dungeon;
 
 public class Armour : Item
 {
-    public int ArmorBonus { get; }
+    private int ArmorBonus { get; }
 
-    public override char Glyph => ']';
+    public override void Draw(IRenderWindow disp)
+    {
+        disp.Draw(Glyph, Pos, Color);
+    }
 
-    public Armour(Vector2 pos, int armorBonus)
-        : base(pos, "Armour", ConsoleColor.Blue)
+    public Armour(int id, Vector2 pos, int armorBonus)
+        : base(id, "Leather Armour", "Armour", armorBonus, ']', pos, ConsoleColor.Blue)
     {
         ArmorBonus = armorBonus;
     }

@@ -1,5 +1,3 @@
-namespace RogueLib.Utilities;
-
 // Immutable 2D vector class with operators for vector math and comparison 
 // Equatable and Comparable, with predefined vectors for common directions
 // and a utility functions for calculating distances, generate a sequence of 

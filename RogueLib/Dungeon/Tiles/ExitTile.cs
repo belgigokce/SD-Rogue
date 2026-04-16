@@ -5,7 +5,7 @@ namespace RogueLib.Dungeon.Tiles
     {
         public ExitTile(int id) : base(id)
         {
-            _isWalkable = true; // You can always walk onto an exit
+            IsWalkable = true; // You can always walk onto an exit
         }
 
         public override void SetTileSpace(int tileSpace)

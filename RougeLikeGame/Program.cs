@@ -1,7 +1,7 @@
 ﻿using RogueLib.Dungeon;
 using RogueLib.Engine;
 using RogueLib.Utilities;
-using TileSet = System.Collections.Generic.HashSet<RogueLib.Utilities.Vector2>;
+using TileSet = System.Collections.Generic.HashSet<Vector2>;
 
 namespace RlGameNS;
 

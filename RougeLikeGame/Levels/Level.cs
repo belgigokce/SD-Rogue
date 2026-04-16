@@ -5,7 +5,7 @@ using RogueLib.Dungeon;
 using RogueLib.Dungeon.Tiles;
 using RogueLib.Engine;
 using RogueLib.Utilities;
-using TileSet = System.Collections.Generic.HashSet<RogueLib.Utilities.Vector2>;
+using TileSet = System.Collections.Generic.HashSet<Vector2>;
 
 namespace RlGameNS;
 
@@ -124,9 +124,9 @@ public class Level : Scene {
       // . - floor, walkable and transparent.
       // + - door, walkable and transparent // # - tunnel, walkable and transparent
       // ' ' - solid stone, not walkable, not transparent.
-      // '|' - wall, not walkable, not transparent, but discoverable.'
+      // '|' - wall, not walkable, not transparent, but discoverable.
       //  others are treated the same as wall.
-      // tunnel, wall, and doorways are decor, once discovered they are visible.
+      // tunnel, wall, and doorways are decor; once discovered, they are visible.
 
       private void initMapTileSets(string map)
     {
@@ -144,9 +144,15 @@ public class Level : Scene {
                 _floor.Add(p);
                 _walkables.Add(p);
             }
+            else if (c == '#') 
+            {
+               _tunnel.Add(p);
+               _walkables.Add(p);
+               _decor.Add(p); 
+            }
             else if (c == '+')
             {
-                // newTile = new DoorTile(idCounter++); // You can create this class
+                newTile = new DoorTile(idCounter++); // You can create this class
                 _door.Add(p);
                 _walkables.Add(p);
             }
@@ -211,25 +217,33 @@ public class Level : Scene {
    }
 
 
-    public void MovePlayer(Vector2 delta)
-    {
-        Vector2 newPos = _player!.Pos + delta;
-
-        if (_walkables.Contains(newPos))
-        {
-            _player.Pos = newPos;
-
-            // INTERHANCE IN ACTION: 
-            // Check if the tile the player stepped on has special logic
-            if (_tileRegistry.TryGetValue(newPos, out Tile steppingOn))
-            {
-                // If this is an ExitTile, this call will run the ExitTile's code!
-                steppingOn.SetTileSpace(1);
-            }
-
+   public void MovePlayer(Vector2 delta)
+   {
+      Vector2 newPos = _player!.Pos + delta;
+      
+      if (_tileRegistry.TryGetValue(newPos, out Tile targetTile))
+      {
+         if (targetTile is DoorTile door && !door.IsOpen)
+         {
+            door.Open();
+            _walkables.Add(newPos);
             updateDiscovered();
-        }
-    }
+            return; 
+         }
+      }
+      
+      if (_walkables.Contains(newPos))
+      {
+         _player.Pos = newPos;
+         
+         if (_tileRegistry.TryGetValue(newPos, out Tile steppingOn))
+         {
+            steppingOn.SetTileSpace(1); 
+         }
+
+         updateDiscovered();
+      }
+   }
 
     public void QuitLevel() {
       _levelActive = false;
