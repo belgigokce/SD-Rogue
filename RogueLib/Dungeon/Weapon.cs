@@ -5,12 +5,7 @@ using RogueLib.Utilities;
 public class Weapon : Item
 {
     private int StrengthBonus { get; }
-
-    public override void Draw(IRenderWindow disp)
-    {
-        disp.Draw(Glyph, Pos, Color);
-    }
-
+    
     public Weapon(int id, Vector2 pos, int strengthBonus)
         : base(id, "Iron Sword", "Weapon", strengthBonus,'/', pos ,ConsoleColor.Cyan)
     {

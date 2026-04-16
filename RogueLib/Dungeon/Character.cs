@@ -5,14 +5,14 @@ namespace RogueLib.Dungeon;
 public abstract class Character : IMoveable, IDamageable
 {
     public int MaxHealth { get; protected set; }
-    public int CurrentHealth { get; protected set; }
-    public int AttackPower { get; protected set; }
-    public int DefenseValue { get; protected set; }
-    public Vector2 Position { get; protected set; }
+    public int CurrentHealth { get; set; }
+    public int AttackPower { get; set; }
+    public int DefenseValue { get; set; }
+    public Vector2 Pos { get; set; }
 
     protected Character(Vector2 startPosition, int maxHealth, int attack, int defense)
     {
-        Position = startPosition;
+        Pos = startPosition;
         MaxHealth = maxHealth;
         CurrentHealth = maxHealth;
         AttackPower = attack;
@@ -21,7 +21,7 @@ public abstract class Character : IMoveable, IDamageable
 
     public void Move(Vector2 direction)
     {
-        Position += direction;
+        Pos += direction;
     }
     
     public virtual void TakeDamage(int amount)
