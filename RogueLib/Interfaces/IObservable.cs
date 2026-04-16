@@ -4,15 +4,15 @@ using System.Text;
 
 namespace RogueLib.Dungeon;
 
-// Vans: Observer Pattern — anything that can broadcast events implements this
+// Vans: New interface — Observer Pattern, any subject that broadcasts events to observers implements this
 public interface IObservable
 {
-    // Vans: Subscribe an observer to this subject
+    // Vans: Subscribe an observer
     void RegisterObserver(IObserver observer);
 
     // Vans: Unsubscribe an observer
     void RemoveObserver(IObserver observer);
 
-    // Vans: Push a named event + value to all subscribed observers
+    // Vans: Broadcast a named event and value to all observers
     void NotifyObservers(string subject, int value);
 }

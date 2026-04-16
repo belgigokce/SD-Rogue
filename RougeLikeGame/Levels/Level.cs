@@ -22,12 +22,12 @@ public class Level : Scene
     protected TileSet _discovered = new();
     protected TileSet _inFov = new();
 
-    // ✅ FIX: Enemy -> Character system
+    // Vans: [START] - Updated, enemy list now uses Character instead of removed Enemy class
     private List<Character> _enemies = new();
     private EnemyFactory _factory = new();
     private int _difficulty = 1;
-
     private UIManager _ui = UIManager.Instance;
+    // Vans: [END]
 
     public Level(Player p, string map, Game game)
     {
@@ -45,16 +45,16 @@ public class Level : Scene
         registerCommandsWithScene();
     }
 
-    // ---------------- UPDATE ----------------
     public override void Update()
     {
         _player!.Update();
 
+        // Vans: [START] - New, each enemy gets an Update tick every turn
         foreach (var enemy in _enemies)
             enemy.Update();
+        // Vans: [END]
     }
 
-    // ---------------- DRAW ----------------
     public override void Draw(IRenderWindow disp)
     {
         var tilesToDraw = new TileSet(_decor);
@@ -75,7 +75,6 @@ public class Level : Scene
         disp.Draw(_player.HUD, new Vector2(0, 24), ConsoleColor.Green);
     }
 
-    // ---------------- COMMANDS ----------------
     public override void DoCommand(Command command)
     {
         if (command.Name == "up") MovePlayer(Vector2.N);
@@ -83,10 +82,11 @@ public class Level : Scene
         else if (command.Name == "left") MovePlayer(Vector2.W);
         else if (command.Name == "right") MovePlayer(Vector2.E);
         else if (command.Name == "quit") _levelActive = false;
+        // Vans: [START] - New, attack command triggers adjacent enemy combat
         else if (command.Name == "attack") AttackNearestEnemy();
+        // Vans: [END]
     }
 
-    // ---------------- MOVEMENT ----------------
     public void MovePlayer(Vector2 delta)
     {
         var newPos = _player!.Pos + delta;
@@ -103,7 +103,7 @@ public class Level : Scene
         }
     }
 
-    // ---------------- ENEMY SPAWN ----------------
+    // Vans: [START] - New, spawns a preset list of enemies onto random walkable tiles at level start
     private void spawnEnemies()
     {
         string[] spawnList = { "goblin", "goblin", "orc", "goblin", "troll" };
@@ -124,8 +124,9 @@ public class Level : Scene
             _enemies.Add(enemy);
         }
     }
+    // Vans: [END]
 
-    // ---------------- DRAW ENEMIES ----------------
+    // Vans: [START] - Updated, only draws enemies inside player's FOV, UIManager draws message after
     private void drawEnemies(IRenderWindow disp)
     {
         foreach (var enemy in _enemies)
@@ -136,8 +137,9 @@ public class Level : Scene
 
         _ui.Draw(disp);
     }
+    // Vans: [END]
 
-    // ---------------- ATTACK SYSTEM ----------------
+    // Vans: [START] - New, checks all 4 adjacent tiles and attacks the first enemy found
     private void AttackNearestEnemy()
     {
         var adjacent = new[] { Vector2.N, Vector2.S, Vector2.E, Vector2.W };
@@ -150,9 +152,7 @@ public class Level : Scene
             if (enemy != null)
             {
                 int dmg = _player.AttackEnemy(enemy);
-
                 _ui.DisplayMessage($"You hit for {dmg} damage!");
-
                 RemoveIfDead(enemy);
                 return;
             }
@@ -160,8 +160,9 @@ public class Level : Scene
 
         _ui.DisplayMessage("Nothing to attack nearby.");
     }
+    // Vans: [END]
 
-    // ---------------- REMOVE DEAD ----------------
+    // Vans: [START] - New, removes dead enemy from list and notifies UIManager for XP display
     private void RemoveIfDead(Character enemy)
     {
         if (enemy.GetHealth() <= 0)
@@ -170,8 +171,8 @@ public class Level : Scene
             _ui.Update("enemyDied", 25);
         }
     }
+    // Vans: [END]
 
-    // ---------------- MAP INIT ----------------
     private void initMapTileSets(string map)
     {
         _floor = new();
@@ -190,10 +191,11 @@ public class Level : Scene
         _walkables = _floor.Union(_tunnel).Union(_door).ToHashSet();
     }
 
-    // ---------------- COMMAND REG ----------------
     private void registerCommandsWithScene()
     {
+        // Vans: [START] - Updated, spawnEnemies called here so walkable tiles are fully built first
         spawnEnemies();
+        // Vans: [END]
 
         RegisterCommand(ConsoleKey.UpArrow, "up");
         RegisterCommand(ConsoleKey.W, "up");
@@ -212,14 +214,15 @@ public class Level : Scene
         RegisterCommand(ConsoleKey.L, "right");
 
         RegisterCommand(ConsoleKey.Q, "quit");
+        // Vans: [START] - New, Spacebar mapped to attack command
         RegisterCommand(ConsoleKey.Spacebar, "attack");
+        // Vans: [END]
     }
 
     private void drawItems(IRenderWindow disp) { }
 
     public void QuitLevel() => _levelActive = false;
 
-    // ---------------- FOV ----------------
     protected void updateDiscovered()
     {
         _inFov = fovCalc(_player!.Pos, _senseRadius);

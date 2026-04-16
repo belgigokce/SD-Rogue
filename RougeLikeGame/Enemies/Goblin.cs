@@ -3,12 +3,12 @@ using RogueLib.Utilities;
 
 namespace RlGameNS;
 
+// Vans: New enemy — light, fast enemy that inherits from Character for shared combat logic
 public class Goblin : Character
 {
-    private static int _nextId = 200;
-
     public override char Glyph => 'g';
 
+    // Vans: Stats scale with level difficulty
     public Goblin(int levelDifficulty = 1)
     {
         _maxHealth = 8 + (levelDifficulty * 2);

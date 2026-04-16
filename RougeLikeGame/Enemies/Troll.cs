@@ -2,7 +2,6 @@
 using RogueLib.Utilities;
 
 namespace RlGameNS;
-
 public class Troll : Character
 {
     private int _regenRate = 2;
@@ -25,6 +24,7 @@ public class Troll : Character
         target.TakeDamage(_attackPower);
     }
 
+    // Vans: [START] - New, Troll regenerates HP each turn up to max
     public override void Update()
     {
         if (_currentHealth < _maxHealth)
@@ -32,6 +32,7 @@ public class Troll : Character
             _currentHealth = Math.Min(_currentHealth + _regenRate, _maxHealth);
         }
     }
+    // Vans: [END]
 
     public void Move(int x, int y)
     {

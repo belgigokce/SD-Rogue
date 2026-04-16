@@ -2,6 +2,7 @@
 
 namespace RogueLib.Engine.Strategies;
 
+// Vans: Concrete Strategy — ranged attack deals 75% of attack power with a configurable range
 public class RangedAttack : AttackStrategy
 {
     private int _range;

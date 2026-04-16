@@ -2,6 +2,7 @@
 
 namespace RogueLib.Engine.Strategies;
 
+// Vans: Concrete Strategy — magic attack deals 150% of attack power with a mana cost
 public class MagicAttack : AttackStrategy
 {
     private int _manaCost;

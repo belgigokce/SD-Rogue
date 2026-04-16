@@ -3,10 +3,12 @@ using RogueLib.Utilities;
 
 namespace RlGameNS;
 
+// Vans: New enemy — tanky, high-damage enemy that inherits from Character
 public class Orc : Character
 {
     public override char Glyph => 'O';
 
+    // Vans: Stats scale with level difficulty
     public Orc(int levelDifficulty = 1)
     {
         _maxHealth = 20 + (levelDifficulty * 4);
