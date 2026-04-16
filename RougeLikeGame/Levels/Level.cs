@@ -60,9 +60,9 @@ public class Level : Scene {
          
       initMapTileSets(map);
       //SpawnItems(rng.Next(1, 8));
-      SpawnItems(rng.Next(10));
+      SpawnItems(10);
       //SpawnEnemies(rng.Next(2, 5));
-      SpawnEnemies(rng.Next(5));
+      SpawnEnemies(5);
       updateDiscovered();
       registerCommandsWithScene();
    }
