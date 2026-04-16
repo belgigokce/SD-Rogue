@@ -1,28 +1,51 @@
-﻿using System;
-using RogueLib.Dungeon;
-using RogueLib.Utilities;
+﻿using RogueLib.Utilities;
 
-public abstract class Item : IActor, IDrawable
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Numerics;
+using System.Text;
+
+namespace RogueLib.Utilities;
+
+namespace RogueLib.Dungeon
 {
-    public Vector2 Pos { get; protected set; }
-    public string Name { get; protected set; }
-    public ConsoleColor Color { get; protected set; }
-
-    public abstract char Glyph { get; }
-
-    protected Item(Vector2 pos, string name, ConsoleColor color)
+    public abstract class Item : IDrawable
     {
-        Pos = pos;
-        Name = name;
-        Color = color;
+        private char v;
+        private Utilities.Vector2 pos;
+        private ConsoleColor yellow;
+
+        public Item(char glyph, Vector2 pos, ConsoleColor color)
+
+        {
+
+            Glyph = glyph;
+
+            Pos = pos;
+
+            Color = color;
+
+        }
+
+        public Vector2 Pos { get; set; }
+        public char Glyph { get; init; }
+         public Item(char c, Utilities.Vector2 pos1, Vector2 pos)
+        {
+            Glyph = c;
+            Pos = pos;
+        }
+
+        protected Item(char v, Utilities.Vector2 pos, ConsoleColor yellow)
+        {
+            this.v = v;
+            this.pos = pos;
+            this.yellow = yellow;
+        }
+
+        public abstract void Draw(IRenderWindow disp);
+        
     }
 
-    public virtual void Draw(IRenderWindow disp)
-    {
-        disp.Draw(Glyph, Pos, Color);
-    }
 
-    public bool IsAt(Vector2 pos) => Pos == pos;
-
-    public abstract void ApplyTo(Player player);
 }
