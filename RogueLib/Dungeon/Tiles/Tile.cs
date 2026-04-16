@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using RogueLib.Utilities;
-namespace RogueLib.Dungeon.Tile
+namespace RogueLib.Dungeon.Tiles
 {
 
     public abstract class Tile // The class is still abstract because you don't want "just a Tile"
