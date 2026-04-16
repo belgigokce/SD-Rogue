@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using RogueLib.Dungeon;
+using RogueLib.Dungeon.Tiles;
 using RogueLib.Engine;
 using RogueLib.Utilities;
 using TileSet = System.Collections.Generic.HashSet<RogueLib.Utilities.Vector2>;
@@ -25,25 +29,29 @@ public class Level : Scene {
    protected string? _map;
    protected int     _senseRadius = 4;
 
-   // --- Tile Sets -----
-   // used to keep track of state of tiles on the map
-   protected TileSet _walkables; // walkable tiles 
-   protected TileSet _floor;
-   protected TileSet _tunnel;
-   protected TileSet _door;
-   protected TileSet _decor; // walls and other decorations, always visible once discovered
+    // --- Tile Registry (The Bridge) ---
+    // This Dictionary maps coordinates to actual Tile objects
+    protected Dictionary<Vector2, Tile> _tileRegistry = new Dictionary<Vector2, Tile>();
 
-   protected TileSet _discovered; // tiles the player has seen
-   protected TileSet _inFov;      // current fov of player
 
-   public Level(Player p, string map, Game game) {
+    // --- Tile Sets -----
+    // used to keep track of state of tiles on the map
+    protected TileSet _walkables = new TileSet();
+    protected TileSet _floor = new TileSet();
+    protected TileSet _tunnel = new TileSet();
+    protected TileSet _door = new TileSet();
+    protected TileSet _decor = new TileSet();
+    protected TileSet _discovered = new TileSet();
+    protected TileSet _inFov = new TileSet();
+
+    public Level(Player p, string map, Game game) {
       if (game == null || p == null || map == null)
          throw new ArgumentNullException("game, player, or map cannot be null");
 
       _player     = p;
       _player.Pos = new Vector2(4, 12); // random, or at stairs
       _map        = map;
-      _game       = _game;
+      _game       = game;
 
       initMapTileSets(map);
       updateDiscovered();
@@ -111,8 +119,6 @@ public class Level : Scene {
 
    private void drawEnemies(IRenderWindow disp) { }
 
-   private void initMapTileSets(string map) {
-      var lines = map.Split('\n');
 
       // ------ rules for map ------
       // . - floor, walkable and transparent.
@@ -122,19 +128,48 @@ public class Level : Scene {
       //  others are treated the same as wall.
       // tunnel, wall, and doorways are decor, once discovered they are visible.
 
-      _floor  = new TileSet();
-      _tunnel = new TileSet();
-      _door   = new TileSet();
-      _decor  = new TileSet();
+      private void initMapTileSets(string map)
+    {
+        int idCounter = 0;
 
-      foreach (var (c, p) in Vector2.Parse(map)) {
-         if (c == '.') _floor.Add(p);
-         else if (c == '+') _door.Add(p);
-         else if (c == '#') _tunnel.Add(p);
-         else if (c != ' ') _decor.Add(p);
-      }
+        // TEACHER'S LOGIC: Using the Parse method to build the world
+        foreach (var (c, p) in Vector2.Parse(map))
+        {
+            Tile? newTile = null;
 
-      _walkables = _floor.Union(_tunnel).Union(_door).ToHashSet();
+            // 1. Identify and create the correct Object (Inheritance)
+            if (c == '.')
+            {
+                // newTile = new FloorTile(idCounter++); // You can create this class
+                _floor.Add(p);
+                _walkables.Add(p);
+            }
+            else if (c == '+')
+            {
+                // newTile = new DoorTile(idCounter++); // You can create this class
+                _door.Add(p);
+                _walkables.Add(p);
+            }
+            else if (c == 'E') // Using 'E' for your ExitTile
+            {
+                newTile = new ExitTile(idCounter++);
+                _floor.Add(p);
+                _walkables.Add(p);
+            }
+            else if (c != ' ')
+            {
+                // newTile = new WallTile(idCounter++); // You can create this class
+                _decor.Add(p);
+            }
+
+            // 2. If an object was created, register it
+            if (newTile != null)
+            {
+                newTile.SetPosition(p); // Tell the tile where it lives
+                _tileRegistry.Add(p, newTile);
+            }
+        }
+    }
 
 //      for (int row = 0; row < lines.Length; ++row) {
 //         for (int col = 0; col < lines[row].Length; ++col) {
@@ -148,7 +183,7 @@ public class Level : Scene {
 //            }
 //         }
 //      }
-   }
+   
 
 // ------------------------------------------------------
 // Commands 
@@ -176,19 +211,27 @@ public class Level : Scene {
    }
 
 
-   public void MovePlayer(Vector2 delta) {
-      var newPos = _player!.Pos + delta;
+    public void MovePlayer(Vector2 delta)
+    {
+        Vector2 newPos = _player!.Pos + delta;
 
-      if (_walkables.Contains(newPos)) {
-         var oldPos = _player!.Pos;
-         _player!.Pos = newPos;
-         _walkables.Remove(newPos); // new tile is now occupied
-         _walkables.Add(oldPos);    // old tile is now free
-         updateDiscovered();
-      }
-   }
+        if (_walkables.Contains(newPos))
+        {
+            _player.Pos = newPos;
 
-   public void QuitLevel() {
+            // INTERHANCE IN ACTION: 
+            // Check if the tile the player stepped on has special logic
+            if (_tileRegistry.TryGetValue(newPos, out Tile steppingOn))
+            {
+                // If this is an ExitTile, this call will run the ExitTile's code!
+                steppingOn.SetTileSpace(1);
+            }
+
+            updateDiscovered();
+        }
+    }
+
+    public void QuitLevel() {
       _levelActive = false;
    }
 }
