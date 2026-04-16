@@ -1,5 +1,7 @@
 namespace RogueLib.Dungeon;
 
-public class IActor {
-  char Glyph { get; }
+// Anything that exists in the world and has a glyph
+public interface IActor
+{
+    char Glyph { get; }
 }

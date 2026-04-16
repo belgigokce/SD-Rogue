@@ -19,7 +19,7 @@ public class Level : Scene
     protected TileSet _inFov;
 
     // Vans: Factory Pattern — enemies are created through EnemyFactory, not with 'new' directly
-    private List<Enemy> _enemies = new();
+    private List<Character> _enemies = new();
     private EnemyFactory _factory = new();
     private int _difficulty = 1;
 
