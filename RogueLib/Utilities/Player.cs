@@ -1,69 +1,60 @@
+using System;
 using RogueLib.Dungeon;
-using RogueLib.Utilities;
+using RogueLib.Engine.Strategies;
 
-public abstract class Player : IActor, IDrawable
+namespace RogueLib.Utilities
 {
-    public string Name { get; set; }
-    public Vector2 Pos;
-    public char Glyph => '@';
-    public ConsoleColor _color = ConsoleColor.White;
-
-    protected int _level = 0;
-    protected int _hp = 12;
-    protected int _str = 16;
-    protected int _arm = 4;
-    protected int _exp = 0;
-    protected int _gold = 0;
-    protected int _maxHp = 12;
-    protected int _maxStr = 16;
-    protected int _turn = 0;
-
-    public int Turn => _turn;
-    public Inventory Inventory { get; }
-
-    public Player()
+    // Abstract player base — Rogue (or any other class) inherits this
+    public abstract class Player : Character, IDrawable
     {
-        Name = "Rogue";
-        Pos = Vector2.Zero;
-        Inventory = new Inventory();
-    }
+        public string Name { get; set; }
+        public ConsoleColor _color = ConsoleColor.White;
 
-    public string HUD =>
-        $"Level:{_level}  Gold: {_gold}    Hp: {_hp}({_maxHp})" +
-        $"  Str: {_str}({_maxStr})" +
-        $"  Arm: {_arm}   Exp: {_exp}/{10} Turn: {_turn}";
+        protected int _level = 0;
+        protected int _exp = 0;
+        protected int _gold = 0;
+        protected int _turn = 0;
 
-    public virtual void Update()
-    {
-        _turn++;
-    }
+        public int Turn => _turn;
+        public Inventory Inventory { get; }
 
-    public virtual void Draw(IRenderWindow disp)
-    {
-        disp.Draw(Glyph, Pos, _color);
-    }
+        // Strategy Pattern — default is melee, swappable at runtime
+        protected AttackStrategy _attackStrategy = new MeleeAttack();
 
-    public void AddGold(int amount)
-    {
-        _gold += amount;
-    }
+        public Player()
+        {
+            Name = "Rogue";
+            Pos = Vector2.Zero;
+            _maxHealth = 12;
+            _currentHealth = 12;
+            _attackPower = 5;
+            _defenseValue = 2;
+            _speed = 1;
+            Inventory = new Inventory();
+        }
 
-    public void Heal(int amount)
-    {
-        _hp += amount;
-        if (_hp > _maxHp)
-            _hp = _maxHp;
-    }
+        public string HUD =>
+            $"Level:{_level}  Gold:{_gold}    Hp:{_currentHealth}/{_maxHealth}" +
+            $"  Str:{_attackPower}  Arm:{_defenseValue}  Exp:{_exp}  Turn:{_turn}";
 
-    public void AddStrength(int amount)
-    {
-        _str += amount;
-        if (_str > _maxStr)
-            _maxStr = _str;
-    }
+        // Swap the attack strategy at runtime
+        public void SetAttackStrategy(AttackStrategy strategy) => _attackStrategy = strategy;
 
-    public void AddArmor(int amount)
-    {
-        _arm += amount;
+        // Delegates attack to the current strategy and returns damage dealt
+        public int AttackEnemy(IDamageable target) => _attackStrategy.Execute(this, target);
+
+        public override void Update() { _turn++; }
+
+        public virtual void Draw(IRenderWindow disp)
+        {
+            disp.Draw(Glyph, Pos, _color);
+        }
+
+        // Item effect methods called by Item subclasses
+        public void AddGold(int amount) { _gold += amount; }
+        public void Heal(int amount) { _currentHealth = Math.Min(_currentHealth + amount, _maxHealth); }
+        public void AddStrength(int amount) { _attackPower += amount; }
+        public void AddArmor(int amount) { _defenseValue += amount; }
+        public void GetExp(int amount) { _exp += amount; }
     }
 }

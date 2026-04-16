@@ -1,38 +1,28 @@
-using System;
-using RogueLib.Engine;
+using RogueLib.Dungeon;
 using RogueLib.Utilities;
 using CommandMap = System.Collections.Generic.Dictionary<System.ConsoleKey, string>;
 
-namespace RogueLib.Dungeon;
+namespace RogueLib.Engine
+{
+    public abstract class Scene : ICommandable, IDrawable
+    {
+        public abstract void DoCommand(Command command);
+        public abstract void Draw(IRenderWindow disp);
+        public abstract void Update();
 
-public abstract class Scene : ICommandable, IDrawable {
-  // scenes must implement these services -------------------------
-  public abstract void DoCommand(Command command);
-  public abstract void Draw(IRenderWindow disp); // render the scene
-  public abstract void Update();                // update the scene
+        protected Player? _player;
+        public Game? _game;
+        protected bool _levelActive = true;
 
+        public bool IsActive => _levelActive;
+        protected CommandMap _commandMap;
 
-   // fields -------------------------------------------------------
-   protected Player? _player;             // reference back to the player
-   public    Game?   _game;               // reference back to the game
-   protected bool    _levelActive = true; // currently active level
+        public bool HasCommand(ConsoleKey inputKey) => _commandMap.ContainsKey(inputKey);
+        public string GetCommand(ConsoleKey inputKey) => _commandMap[inputKey];
 
-   // command system ------------------------------------------------
-   public    bool       IsActive => _levelActive;
-   protected CommandMap _commandMap;
+        protected void RegisterCommand(ConsoleKey inputKey, string command)
+            => _commandMap[inputKey] = command;
 
-   public bool HasCommand(ConsoleKey inputKey)
-      => _commandMap.ContainsKey(inputKey);
-
-   public string GetCommand(ConsoleKey inputKey)
-      => _commandMap[inputKey];
-
-   protected void RegisterCommand(ConsoleKey inputKey, string command)
-      => _commandMap[inputKey] = command;
-
-   // Constructor -----------------------------------------------------
-   public Scene()
-   {
-      _commandMap = new CommandMap();// Explicitly create the dictionary
+        public Scene() { _commandMap = new(); }
     }
 }

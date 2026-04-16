@@ -1,20 +1,16 @@
 ﻿using System;
 using RogueLib.Utilities;
 
-public class Armour : Item
+namespace RogueLib.Dungeon
 {
-    public int ArmorBonus { get; }
-
-    public override char Glyph => ']';
-
-    public Armour(Vector2 pos, int armorBonus)
-        : base(pos, "Armour", ConsoleColor.Blue)
+    public class Armour : Item
     {
-        ArmorBonus = armorBonus;
-    }
+        public Armour(int id, Vector2 pos, int armorBonus)
+            : base(id, "Leather Armour", "Armour", armorBonus, ']', pos, ConsoleColor.Blue) { }
 
-    public override void ApplyTo(Player player)
-    {
-        player.AddArmor(ArmorBonus);
+        public override void ApplyTo(Player player)
+        {
+            player.AddArmor(EffectValue);
+        }
     }
 }

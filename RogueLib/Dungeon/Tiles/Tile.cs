@@ -5,23 +5,21 @@ namespace RogueLib.Dungeon.Tiles
 {
     public abstract class Tile
     {
-        protected int _tileId;
-        protected Vector2 _tilePosition;
-        protected bool _isWalkable;
+        public int TileId;
+        public Vector2 Position;
+        public bool IsWalkable;
 
         public Tile(int id)
         {
-            _tileId = id;
-            _tilePosition = Vector2.Zero;
+            TileId = id;
+            Position = Vector2.Zero;
         }
 
-        // --- FIXED: SetPosition belongs in the class body ---
         public void SetPosition(Vector2 position)
         {
-            _tilePosition = position;
+            Position = position;
         }
 
-        // --- TEACHER'S LOGIC: Using the Registry for Neighbors ---
         public virtual List<Tile> GetNeighbors(Dictionary<Vector2, Tile> levelMap)
         {
             List<Tile> neighbors = new List<Tile>();
@@ -29,18 +27,13 @@ namespace RogueLib.Dungeon.Tiles
 
             foreach (var dir in directions)
             {
-                Vector2 targetPos = _tilePosition + dir;
+                Vector2 targetPos = Position + dir;
                 if (levelMap.ContainsKey(targetPos))
-                {
                     neighbors.Add(levelMap[targetPos]);
-                }
             }
             return neighbors;
         }
 
-        public virtual void SetTileSpace(int tileSpace)
-        {
-            // Default implementation
-        }
+        public virtual void SetTileSpace(int tileSpace) { }
     }
 }

@@ -1,16 +1,12 @@
-﻿using System.Collections.Generic;
-namespace RogueLib.Dungeon.Tiles
+﻿namespace RogueLib.Dungeon.Tiles
 {
     public class ExitTile : Tile
     {
         public ExitTile(int id) : base(id)
         {
-            _isWalkable = true; // You can always walk onto an exit
+            IsWalkable = true;
         }
 
-        public override void SetTileSpace(int tileSpace)
-        {
-            // Implementation for ExitTile
-        }
+        public override void SetTileSpace(int tileSpace) { }
     }
 }

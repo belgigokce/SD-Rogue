@@ -1,20 +1,16 @@
 ﻿using System;
 using RogueLib.Utilities;
 
-public class Gold : Item
+namespace RogueLib.Dungeon
 {
-    public int Amount { get; }
-
-    public override char Glyph => '$';
-
-    public Gold(Vector2 pos, int amount)
-        : base(pos, "Gold", ConsoleColor.Yellow)
+    public class Gold : Item
     {
-        Amount = amount;
-    }
+        public Gold(int id, Vector2 pos, int amount)
+            : base(id, "Gold", "Currency", amount, '$', pos, ConsoleColor.Yellow) { }
 
-    public override void ApplyTo(Player player)
-    {
-        player.AddGold(Amount);
+        public override void ApplyTo(Player player)
+        {
+            player.AddGold(EffectValue);
+        }
     }
 }

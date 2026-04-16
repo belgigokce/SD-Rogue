@@ -1,21 +1,23 @@
 using RogueLib.Utilities;
 
-namespace RogueLib.Dungeon;
-
-public abstract class Enemy : Character
+namespace RogueLib.Dungeon
 {
-    public int EnemyId { get; protected set; }
-    public int Speed { get; protected set;  }
-
-    protected Enemy(int enemyId, Vector2 startPosition, int maxHealth, 
-        int attack, int defense, int speed) : base (startPosition, maxHealth, attack, defense)
+    public abstract class Enemy : Character
     {
-        EnemyId = enemyId;
-        Speed = speed;
-    }
+        public int EnemyId { get; protected set; }
+        public int Speed { get; protected set; }
 
-    public virtual void AttackTarget(Character target)
-    {
-        target.TakeDamage(AttackPower);
+        protected Enemy(int enemyId, Vector2 startPosition, int maxHealth,
+            int attack, int defense, int speed)
+            : base(startPosition, maxHealth, attack, defense)
+        {
+            EnemyId = enemyId;
+            Speed = speed;
+        }
+
+        public virtual void AttackTarget(Character target)
+        {
+            target.TakeDamage(GetAttackPower());
+        }
     }
 }

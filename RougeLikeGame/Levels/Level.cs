@@ -7,231 +7,320 @@ using RogueLib.Engine;
 using RogueLib.Utilities;
 using TileSet = System.Collections.Generic.HashSet<RogueLib.Utilities.Vector2>;
 
-namespace RlGameNS;
-
-// -----------------------------------------------------------------------
-// The Level is the model, all the game world objects live in the model. 
-// player input updates the model, the model updates the view, and the 
-// controller runs the whole thing. 
-//
-// Scene is the base class for all game scenes (levels). Scene is an 
-// abstract class that implements IDrawable and ICommandable. 
-// 
-// A dungeon level is a collection or rooms and tunnels in a 78x25 grid. 
-// each tile is at a point, or grid location, represented by a Vector2. 
-// 
-// *TileSets* are HashSets of grid points, TileSets can be used to tell 
-// GameScreen what tiles to draw. TileSets can be combined with Union and 
-// Intersect to create complex tile sets.
-// -----------------------------------------------------------------------
-public class Level : Scene {
-   // ---- level config ---- 
-   protected string? _map;
-   protected int     _senseRadius = 4;
-
-    // --- Tile Registry (The Bridge) ---
-    // This Dictionary maps coordinates to actual Tile objects
-    protected Dictionary<Vector2, Tile> _tileRegistry = new Dictionary<Vector2, Tile>();
-
-
-    // --- Tile Sets -----
-    // used to keep track of state of tiles on the map
-    protected TileSet _walkables = new TileSet();
-    protected TileSet _floor = new TileSet();
-    protected TileSet _tunnel = new TileSet();
-    protected TileSet _door = new TileSet();
-    protected TileSet _decor = new TileSet();
-    protected TileSet _discovered = new TileSet();
-    protected TileSet _inFov = new TileSet();
-
-    public Level(Player p, string map, Game game) {
-      if (game == null || p == null || map == null)
-         throw new ArgumentNullException("game, player, or map cannot be null");
-
-      _player     = p;
-      _player.Pos = new Vector2(4, 12); // random, or at stairs
-      _map        = map;
-      _game       = game;
-
-      initMapTileSets(map);
-      updateDiscovered();
-      registerCommandsWithScene();
-   }
-
-   protected void updateDiscovered() {
-      _inFov = fovCalc(_player!.Pos, _senseRadius);
-
-      if (_discovered is null)
-         _discovered = new TileSet();
-
-      _discovered.UnionWith(_inFov);
-   }
-
-   protected TileSet fovCalc(Vector2 pos, int sens)
-      => Vector2.getAllTiles().Where(t => (pos - t).RookLength < sens).ToHashSet();
-
-   // -----------------------------------------------------------------------
-   public override void Update() {
-      _player!.Update();
-      // foreach item update
-      // foreach NPC update 
-      // check for player death -- on death build RIP message
-   }
-
-   public override void Draw(IRenderWindow? disp) {
-      // using custom RenderWindow, cast to my RenderWindow
-      var tilesToDraw = new TileSet(_decor);
-      tilesToDraw.IntersectWith(_discovered);
-      tilesToDraw.UnionWith(_inFov);
-
-      disp.fDraw(tilesToDraw, _map, ConsoleColor.Gray);
-
-      var rng = new Random();
-      if (_player.Turn % 5 == 0)
-         _player._color = (ConsoleColor)rng.Next(10, 16);
-      _player!.Draw(disp);
-      // disp.Draw(_player!.Glyph, _player!.Pos, ConsoleColor.Cyan);
-
-      drawItems(disp);
-      drawEnemies(disp);
-      disp.Draw(_player.HUD, new Vector2(0, 24), ConsoleColor.Green);
-   }
-
-   public override void DoCommand(Command command) {
-      // player ctl  
-      if (command.Name == "up") {
-         MovePlayer(Vector2.N);
-      } else if (command.Name == "down") {
-         MovePlayer(Vector2.S);
-      } else if (command.Name == "left") {
-         MovePlayer(Vector2.W);
-      } else if (command.Name == "right") {
-         MovePlayer(Vector2.E);
-      } // game ctl      
-      else if (command.Name == "quit") {
-         _levelActive = false;
-      }
-   }
-
-// -------------------------------------------------------------------------
-
-   private void drawItems(IRenderWindow disp) { }
-
-   private void drawEnemies(IRenderWindow disp) { }
-
-
-      // ------ rules for map ------
-      // . - floor, walkable and transparent.
-      // + - door, walkable and transparent // # - tunnel, walkable and transparent
-      // ' ' - solid stone, not walkable, not transparent.
-      // '|' - wall, not walkable, not transparent, but discoverable.'
-      //  others are treated the same as wall.
-      // tunnel, wall, and doorways are decor, once discovered they are visible.
-
-      private void initMapTileSets(string map)
+namespace RlGameNS
+{
+    public class Level : Scene
     {
-        int idCounter = 0;
+        // ---- config ----
+        protected string? _map;
+        protected int _senseRadius = 4;
 
-        // TEACHER'S LOGIC: Using the Parse method to build the world
-        foreach (var (c, p) in Vector2.Parse(map))
+        // ---- tile registry (maps coordinates to Tile objects) ----
+        protected Dictionary<Vector2, Tile> _tileRegistry = new();
+
+        // ---- tile sets ----
+        protected TileSet _walkables = new();
+        protected TileSet _floor = new();
+        protected TileSet _tunnel = new();
+        protected TileSet _door = new();
+        protected TileSet _decor = new();
+        protected TileSet _discovered = new();
+        protected TileSet _inFov = new();
+
+        // ---- entities ----
+        private List<Item> _items = new();
+        private List<Character> _enemies = new();
+        private EnemyFactory _factory = new();
+        private int _difficulty = 1;
+        private UIManager _ui = UIManager.Instance;
+
+        // -----------------------------------------------------------------------
+        public Level(Player p, string map, Game game)
         {
-            Tile? newTile = null;
+            if (game == null || p == null || map == null)
+                throw new ArgumentNullException("game, player, or map cannot be null");
 
-            // 1. Identify and create the correct Object (Inheritance)
-            if (c == '.')
-            {
-                // newTile = new FloorTile(idCounter++); // You can create this class
-                _floor.Add(p);
-                _walkables.Add(p);
-            }
-            else if (c == '+')
-            {
-                // newTile = new DoorTile(idCounter++); // You can create this class
-                _door.Add(p);
-                _walkables.Add(p);
-            }
-            else if (c == 'E') // Using 'E' for your ExitTile
-            {
-                newTile = new ExitTile(idCounter++);
-                _floor.Add(p);
-                _walkables.Add(p);
-            }
-            else if (c != ' ')
-            {
-                // newTile = new WallTile(idCounter++); // You can create this class
-                _decor.Add(p);
-            }
+            _player = p;
+            _player.Pos = new Vector2(4, 12);
+            _map = map;
+            _game = game;
 
-            // 2. If an object was created, register it
-            if (newTile != null)
-            {
-                newTile.SetPosition(p); // Tell the tile where it lives
-                _tileRegistry.Add(p, newTile);
-            }
-        }
-    }
+            initMapTileSets(map);
 
-//      for (int row = 0; row < lines.Length; ++row) {
-//         for (int col = 0; col < lines[row].Length; ++col) {
-//            char tile = lines[row][col];
-//
-//            if (tile == '.' || tile == '+' || tile == '#') {
-//               _walkables.Add(new Vector2(col, row));
-//               _decor.Add(new Vector2(col, row));
-//            } else if (tile != ' ') {
-//               _decor.Add(new Vector2(col, row));
-//            }
-//         }
-//      }
-   
-
-// ------------------------------------------------------
-// Commands 
-// ------------------------------------------------------
-
-
-   private void registerCommandsWithScene() {
-      RegisterCommand(ConsoleKey.UpArrow, "up");
-      RegisterCommand(ConsoleKey.W, "up");
-      RegisterCommand(ConsoleKey.K, "up");
-
-      RegisterCommand(ConsoleKey.DownArrow, "down");
-      RegisterCommand(ConsoleKey.S, "down");
-      RegisterCommand(ConsoleKey.J, "down");
-
-      RegisterCommand(ConsoleKey.DownArrow, "left");
-      RegisterCommand(ConsoleKey.A, "left");
-      RegisterCommand(ConsoleKey.H, "left");
-
-      RegisterCommand(ConsoleKey.DownArrow, "right");
-      RegisterCommand(ConsoleKey.D, "right");
-      RegisterCommand(ConsoleKey.L, "right");
-
-      RegisterCommand(ConsoleKey.Q, "quit");
-   }
-
-
-    public void MovePlayer(Vector2 delta)
-    {
-        Vector2 newPos = _player!.Pos + delta;
-
-        if (_walkables.Contains(newPos))
-        {
-            _player.Pos = newPos;
-
-            // INTERHANCE IN ACTION: 
-            // Check if the tile the player stepped on has special logic
-            if (_tileRegistry.TryGetValue(newPos, out Tile steppingOn))
-            {
-                // If this is an ExitTile, this call will run the ExitTile's code!
-                steppingOn.SetTileSpace(1);
-            }
-
+            // FIX: always spawn 3–7 items so the floor is never empty
+            SpawnItems(new Random().Next(3, 8));
+            SpawnEnemies();
             updateDiscovered();
+            registerCommandsWithScene();
         }
-    }
 
-    public void QuitLevel() {
-      _levelActive = false;
-   }
+        // -----------------------------------------------------------------------
+        public override void Update()
+        {
+            _player!.Update();
+
+            // Give every enemy an update tick (Troll regenerates here, etc.)
+            foreach (var enemy in _enemies)
+                enemy.Update();
+        }
+
+        // -----------------------------------------------------------------------
+        public override void Draw(IRenderWindow disp)
+        {
+            var tilesToDraw = new TileSet(_decor);
+            tilesToDraw.IntersectWith(_discovered);
+            tilesToDraw.UnionWith(_inFov);
+
+            disp.fDraw(tilesToDraw, _map!, ConsoleColor.Gray);
+
+            // Colour flicker effect every 5 turns
+            var rng = new Random();
+            if (_player!.Turn % 5 == 0)
+                _player._color = (ConsoleColor)rng.Next(10, 16);
+
+            _player!.Draw(disp);
+            drawItems(disp);
+            drawEnemies(disp);    // also calls _ui.Draw at the end
+
+            disp.Draw(_player.HUD, new Vector2(0, 24), ConsoleColor.Green);
+        }
+
+        // -----------------------------------------------------------------------
+        public override void DoCommand(Command command)
+        {
+            if (command.Name == "up") MovePlayer(Vector2.N);
+            else if (command.Name == "down") MovePlayer(Vector2.S);
+            else if (command.Name == "left") MovePlayer(Vector2.W);
+            else if (command.Name == "right") MovePlayer(Vector2.E);
+            else if (command.Name == "attack") AttackNearestEnemy();
+            else if (command.Name == "quit") _levelActive = false;
+        }
+
+        // -----------------------------------------------------------------------
+        public void MovePlayer(Vector2 delta)
+        {
+            Vector2 newPos = _player!.Pos + delta;
+
+            // ---- bump-attack any enemy at the target cell ----
+            var targetEnemy = _enemies.FirstOrDefault(e => e.Pos == newPos);
+            if (targetEnemy != null)
+            {
+                int dmg = _player.AttackEnemy(targetEnemy);
+                _ui.DisplayMessage($"You hit for {dmg} damage!");
+
+                if (targetEnemy.GetHealth() <= 0)
+                {
+                    _player.GetExp(25);
+                    _enemies.Remove(targetEnemy);
+                    _ui.Update("enemyDied", 25);
+                }
+                else
+                {
+                    // Enemy retaliates
+                    _player.TakeDamage(targetEnemy.GetAttackPower());
+                    _ui.DisplayMessage($"Enemy hits back!  HP: {_player.CurrentHealth}/{_player.MaxHealth}");
+
+                    if (_player.CurrentHealth <= 0)
+                        _levelActive = false;
+                }
+
+                updateDiscovered();
+                return;
+            }
+
+            // ---- open a closed door ----
+            if (_tileRegistry.TryGetValue(newPos, out Tile? targetTile))
+            {
+                if (targetTile is DoorTile door && !door.IsOpen)
+                {
+                    door.Open();
+                    _walkables.Add(newPos);
+                    _ui.DisplayMessage("You open the door.");
+                    updateDiscovered();
+                    return;
+                }
+            }
+
+            // ---- normal movement ----
+            if (_walkables.Contains(newPos))
+            {
+                _player.Pos = newPos;
+
+                // Pick up any item on this tile
+                var steppedOnItem = _items.FirstOrDefault(i => i.Pos == newPos);
+                if (steppedOnItem != null)
+                {
+                    steppedOnItem.ApplyTo(_player);
+                    _ui.DisplayMessage($"You picked up {steppedOnItem.ItemName}!");
+                    _items.Remove(steppedOnItem);
+                }
+
+                if (_tileRegistry.TryGetValue(newPos, out Tile? steppingOn))
+                    steppingOn.SetTileSpace(1);
+
+                updateDiscovered();
+            }
+        }
+
+        // -----------------------------------------------------------------------
+        // Space-bar attack: hits the first enemy found in an adjacent cell
+        private void AttackNearestEnemy()
+        {
+            var adjacent = new[] { Vector2.N, Vector2.S, Vector2.E, Vector2.W };
+
+            foreach (var dir in adjacent)
+            {
+                var checkPos = _player!.Pos + dir;
+                var enemy = _enemies.FirstOrDefault(e => e.Pos == checkPos);
+
+                if (enemy != null)
+                {
+                    int dmg = _player.AttackEnemy(enemy);
+                    _ui.DisplayMessage($"You hit for {dmg} damage!");
+
+                    if (enemy.GetHealth() <= 0)
+                    {
+                        _player.GetExp(25);
+                        _enemies.Remove(enemy);
+                        _ui.Update("enemyDied", 25);
+                    }
+                    return;
+                }
+            }
+
+            _ui.DisplayMessage("Nothing to attack nearby.");
+        }
+
+        // -----------------------------------------------------------------------
+        // Spawns a fixed roster of enemies onto random floor tiles
+        private void SpawnEnemies()
+        {
+            string[] roster = { "goblin", "goblin", "orc", "goblin", "troll" };
+            var floorList = _floor.ToList();
+            var rng = new Random();
+
+            foreach (var type in roster)
+            {
+                if (floorList.Count == 0) break;
+
+                Character enemy = _factory.CreateEnemy(type, _difficulty);
+                int idx = rng.Next(floorList.Count);
+                enemy.Pos = floorList[idx];
+                floorList.RemoveAt(idx);
+                _enemies.Add(enemy);
+            }
+        }
+
+        // -----------------------------------------------------------------------
+        // FIX: rng.Next(4) guarantees every slot spawns one of the 4 item types.
+        // Previously rng.Next(10) left 60 % of slots empty and could spawn 0 items.
+        private void SpawnItems(int count)
+        {
+            var rng = new Random();
+            var validSpots = _floor.ToList();
+
+            for (int i = 0; i < count; i++)
+            {
+                if (validSpots.Count == 0) break;
+
+                int index = rng.Next(validSpots.Count);
+                Vector2 spawnPos = validSpots[index];
+                validSpots.RemoveAt(index);
+
+                switch (rng.Next(4))  // always picks one of the 4 types
+                {
+                    case 0: _items.Add(new Gold(i, spawnPos, rng.Next(10, 50))); break;
+                    case 1: _items.Add(new Armour(i, spawnPos, rng.Next(1, 5))); break;
+                    case 2: _items.Add(new Weapon(i, spawnPos, rng.Next(3, 10))); break;
+                    case 3: _items.Add(new Potion(i, spawnPos, rng.Next(5, 10))); break;
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------------
+        private void drawItems(IRenderWindow disp)
+        {
+            foreach (var item in _items)
+                if (_inFov.Contains(item.Pos))
+                    item.Draw(disp);
+        }
+
+        private void drawEnemies(IRenderWindow disp)
+        {
+            foreach (var enemy in _enemies)
+                if (_inFov.Contains(enemy.Pos))
+                    disp.Draw(enemy.Glyph, enemy.Pos, ConsoleColor.Red);
+
+            _ui.Draw(disp); // draws the pending UI message on row 23
+        }
+
+        // -----------------------------------------------------------------------
+        // Builds all tile sets and the tile registry from the raw map string
+        private void initMapTileSets(string map)
+        {
+            int idCounter = 0;
+            _floor = new();
+            _tunnel = new();
+            _door = new();
+            _decor = new();
+            _tileRegistry = new();
+
+            foreach (var (c, p) in Vector2.Parse(map))
+            {
+                Tile? newTile = null;
+
+                if (c == '.') { _floor.Add(p); }
+                else if (c == '#') { _tunnel.Add(p); _decor.Add(p); }
+                else if (c == '+') { newTile = new DoorTile(idCounter++); _door.Add(p); _decor.Add(p); }
+                else if (c == 'E') { newTile = new ExitTile(idCounter++); _floor.Add(p); }
+                else if (c != ' ') { _decor.Add(p); }
+
+                if (newTile != null)
+                {
+                    newTile.SetPosition(p);
+                    _tileRegistry.Add(p, newTile);
+                }
+            }
+
+            _walkables = _floor.Union(_tunnel).Union(_door).ToHashSet();
+        }
+
+        // -----------------------------------------------------------------------
+        private void registerCommandsWithScene()
+        {
+            RegisterCommand(ConsoleKey.UpArrow, "up");
+            RegisterCommand(ConsoleKey.W, "up");
+            RegisterCommand(ConsoleKey.K, "up");
+
+            RegisterCommand(ConsoleKey.DownArrow, "down");
+            RegisterCommand(ConsoleKey.S, "down");
+            RegisterCommand(ConsoleKey.J, "down");
+
+            RegisterCommand(ConsoleKey.LeftArrow, "left");
+            RegisterCommand(ConsoleKey.A, "left");
+            RegisterCommand(ConsoleKey.H, "left");
+
+            RegisterCommand(ConsoleKey.RightArrow, "right");
+            RegisterCommand(ConsoleKey.D, "right");
+            RegisterCommand(ConsoleKey.L, "right");
+
+            RegisterCommand(ConsoleKey.Spacebar, "attack");
+            RegisterCommand(ConsoleKey.Q, "quit");
+        }
+
+        // -----------------------------------------------------------------------
+        protected void updateDiscovered()
+        {
+            _inFov = fovCalc(_player!.Pos, _senseRadius);
+            _discovered ??= new TileSet();
+            _discovered.UnionWith(_inFov);
+        }
+
+        protected TileSet fovCalc(Vector2 pos, int sens)
+            => Vector2.getAllTiles()
+                      .Where(t => (pos - t).RookLength < sens)
+                      .ToHashSet();
+
+        public void QuitLevel() => _levelActive = false;
+    }
 }

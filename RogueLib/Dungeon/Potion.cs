@@ -1,20 +1,16 @@
 ﻿using System;
 using RogueLib.Utilities;
 
-public class Potion : Item
+namespace RogueLib.Dungeon
 {
-    public int HealAmount { get; }
-
-    public override char Glyph => '!';
-
-    public Potion(Vector2 pos, int healAmount)
-        : base(pos, "Potion", ConsoleColor.Magenta)
+    public class Potion : Item
     {
-        HealAmount = healAmount;
-    }
+        public Potion(int id, Vector2 pos, int healAmount)
+            : base(id, "Healing Potion", "Potion", healAmount, '!', pos, ConsoleColor.Magenta) { }
 
-    public override void ApplyTo(Player player)
-    {
-        player.Heal(HealAmount);
+        public override void ApplyTo(Player player)
+        {
+            player.Heal(EffectValue);
+        }
     }
 }

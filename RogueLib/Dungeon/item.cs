@@ -1,51 +1,39 @@
-﻿using RogueLib.Utilities;
-
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Numerics;
-using System.Text;
-
-namespace RogueLib.Utilities;
+﻿using System;
+using RogueLib.Utilities;
 
 namespace RogueLib.Dungeon
 {
-    public abstract class Item : IDrawable
+    public abstract class Item : IDrawable, INameable
     {
-        private char v;
-        private Utilities.Vector2 pos;
-        private ConsoleColor yellow;
-
-        public Item(char glyph, Vector2 pos, ConsoleColor color)
-
-        {
-
-            Glyph = glyph;
-
-            Pos = pos;
-
-            Color = color;
-
-        }
-
+        public int ItemId { get; protected set; }
+        public string ItemName { get; protected set; }
+        public string ItemType { get; protected set; }
+        public int EffectValue { get; protected set; }
         public Vector2 Pos { get; set; }
-        public char Glyph { get; init; }
-         public Item(char c, Utilities.Vector2 pos1, Vector2 pos)
+        public char Glyph { get; protected set; }
+        public ConsoleColor Color { get; protected set; }
+
+        public Item(int id, string name, string type, int effect, char glyph, Vector2 pos, ConsoleColor color)
         {
-            Glyph = c;
+            ItemId = id;
+            ItemName = name;
+            ItemType = type;
+            EffectValue = effect;
+            Glyph = glyph;
             Pos = pos;
+            Color = color;
         }
 
-        protected Item(char v, Utilities.Vector2 pos, ConsoleColor yellow)
+        public virtual void Draw(IRenderWindow disp)
         {
-            this.v = v;
-            this.pos = pos;
-            this.yellow = yellow;
+            disp.Draw(Glyph, Pos, Color);
         }
 
-        public abstract void Draw(IRenderWindow disp);
-        
+        public void Rename(string newName)
+        {
+            ItemName = newName;
+        }
+
+        public abstract void ApplyTo(Player player);
     }
-
-
 }

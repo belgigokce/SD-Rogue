@@ -1,20 +1,16 @@
 ﻿using System;
 using RogueLib.Utilities;
 
-public class Weapon : Item
+namespace RogueLib.Dungeon
 {
-    public int StrengthBonus { get; }
-
-    public override char Glyph => ')';
-
-    public Weapon(Vector2 pos, int strengthBonus)
-        : base(pos, "Weapon", ConsoleColor.Cyan)
+    public class Weapon : Item
     {
-        StrengthBonus = strengthBonus;
-    }
+        public Weapon(int id, Vector2 pos, int strengthBonus)
+            : base(id, "Iron Sword", "Weapon", strengthBonus, '/', pos, ConsoleColor.Cyan) { }
 
-    public override void ApplyTo(Player player)
-    {
-        player.AddStrength(StrengthBonus);
+        public override void ApplyTo(Player player)
+        {
+            player.AddStrength(EffectValue);
+        }
     }
 }

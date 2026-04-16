@@ -1,6 +1,7 @@
-namespace RogueLib.Dungeon;
-
-public interface INameable
+namespace RogueLib.Dungeon
 {
-    void Rename(string newName);
+    public interface INameable
+    {
+        void Rename(string newName);
+    }
 }
