@@ -26,7 +26,16 @@ public class Game {
       _isQuit = false;
    }
 
-   public void run() {
+    // I added this because constructor was empty
+    public void Initialize(IRenderWindow window, Player player, Scene startLevel)
+    {
+        _window = window;
+        _player = player;
+        _currentLevel = startLevel;
+        _currentLevel._game = this; // Link the level back to this game instance
+    }
+
+    public void run() {
       // the game loop
       while (_currentLevel!.IsActive) {
          // ---------------

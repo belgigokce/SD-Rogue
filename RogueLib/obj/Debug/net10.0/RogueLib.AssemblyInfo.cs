@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RogueLib")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ce91559bbc63d478eba0d280d31a5a23026b4a4d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e633c0924fdce327ac30230a2ad6f799171841f2")]
 [assembly: System.Reflection.AssemblyProductAttribute("RogueLib")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RogueLib")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
