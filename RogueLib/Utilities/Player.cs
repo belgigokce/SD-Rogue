@@ -1,37 +1,33 @@
 using RogueLib.Dungeon;
 using RogueLib.Utilities;
+using System;
 
-public abstract class Player : IActor, IDrawable
+// Inheriting from Character is the "glue" that makes combat work
+public class Player : Character, IActor, IDrawable
 {
     public string Name { get; set; }
-    public Vector2 Pos;
     public char Glyph => '@';
     public ConsoleColor _color = ConsoleColor.White;
 
     protected int _level = 0;
-    protected int _hp = 12;
-    protected int _str = 16;
-    protected int _arm = 4;
     protected int _exp = 0;
     protected int _gold = 0;
-    protected int _maxHp = 12;
-    protected int _maxStr = 16;
     protected int _turn = 0;
+    protected int _maxStr = 16;
 
     public int Turn => _turn;
     public Inventory Inventory { get; }
 
-    public Player()
+    public Player() : base(Vector2.Zero, 12, 16, 4) 
     {
         Name = "Rogue";
-        Pos = Vector2.Zero;
         Inventory = new Inventory();
     }
 
     public string HUD =>
-        $"Level:{_level}  Gold: {_gold}    Hp: {_hp}({_maxHp})" +
-        $"  Str: {_str}({_maxStr})" +
-        $"  Arm: {_arm}   Exp: {_exp}/{10} Turn: {_turn}";
+        $"Level:{_level}  Gold: {_gold}    Hp: {CurrentHealth}({MaxHealth})" +
+        $"  Str: {AttackPower}" +
+        $"  Arm: {DefenseValue}   Exp: {_exp}/{10} Turn: {_turn}";
 
     public virtual void Update()
     {
@@ -50,20 +46,22 @@ public abstract class Player : IActor, IDrawable
 
     public void Heal(int amount)
     {
-        _hp += amount;
-        if (_hp > _maxHp)
-            _hp = _maxHp;
+        CurrentHealth += amount;
+        if (CurrentHealth > MaxHealth) CurrentHealth = MaxHealth;
     }
 
     public void AddStrength(int amount)
     {
-        _str += amount;
-        if (_str > _maxStr)
-            _maxStr = _str;
+        AttackPower += amount;
     }
 
     public void AddArmor(int amount)
     {
-        _arm += amount;
+        DefenseValue += amount;
+    }
+
+    public void GetExp(int amount)
+    {
+        _exp += amount;
     }
 }

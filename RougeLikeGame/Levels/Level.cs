@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using RogueLib.Dungeon;
 using RogueLib.Dungeon.Tiles;
 using RogueLib.Engine;
 using RogueLib.Utilities;
-using TileSet = System.Collections.Generic.HashSet<RogueLib.Utilities.Vector2>;
+using TileSet = System.Collections.Generic.HashSet<Vector2>;
 
 namespace RlGameNS;
 
@@ -20,7 +21,7 @@ namespace RlGameNS;
 // A dungeon level is a collection or rooms and tunnels in a 78x25 grid. 
 // each tile is at a point, or grid location, represented by a Vector2. 
 // 
-// *TileSets* are HashSets of grid points, TileSets can be used to tell 
+// *TileSets* are HashSets of grid points, TileSets can be used to tell
 // GameScreen what tiles to draw. TileSets can be combined with Union and 
 // Intersect to create complex tile sets.
 // -----------------------------------------------------------------------
@@ -32,6 +33,9 @@ public class Level : Scene {
     // --- Tile Registry (The Bridge) ---
     // This Dictionary maps coordinates to actual Tile objects
     protected Dictionary<Vector2, Tile> _tileRegistry = new Dictionary<Vector2, Tile>();
+    
+    protected List<Item> _items = new List<Item>();
+    protected List<Enemy> _enemies = new List<Enemy>();
 
 
     // --- Tile Sets -----
@@ -52,8 +56,13 @@ public class Level : Scene {
       _player.Pos = new Vector2(4, 12); // random, or at stairs
       _map        = map;
       _game       = game;
-
+      Random rng = new Random();
+         
       initMapTileSets(map);
+      //SpawnItems(rng.Next(1, 8));
+      SpawnItems(rng.Next(10));
+      //SpawnEnemies(rng.Next(2, 5));
+      SpawnEnemies(rng.Next(5));
       updateDiscovered();
       registerCommandsWithScene();
    }
@@ -98,7 +107,6 @@ public class Level : Scene {
    }
 
    public override void DoCommand(Command command) {
-      // player ctl  
       if (command.Name == "up") {
          MovePlayer(Vector2.N);
       } else if (command.Name == "down") {
@@ -107,7 +115,7 @@ public class Level : Scene {
          MovePlayer(Vector2.W);
       } else if (command.Name == "right") {
          MovePlayer(Vector2.E);
-      } // game ctl      
+      }    
       else if (command.Name == "quit") {
          _levelActive = false;
       }
@@ -115,18 +123,34 @@ public class Level : Scene {
 
 // -------------------------------------------------------------------------
 
-   private void drawItems(IRenderWindow disp) { }
-
-   private void drawEnemies(IRenderWindow disp) { }
-
-
+   private void drawItems(IRenderWindow disp) 
+   { 
+      foreach (var item in _items)
+      {
+         if (_inFov.Contains(item.Pos))
+         {
+            item.Draw(disp);
+         }
+      }
+   }
+   
+   private void drawEnemies(IRenderWindow disp) 
+   { 
+      foreach (var enemy in _enemies)
+      {
+         if (_inFov.Contains(enemy.Pos))
+         {
+            enemy.Draw(disp);
+         }
+      }
+   }
       // ------ rules for map ------
       // . - floor, walkable and transparent.
       // + - door, walkable and transparent // # - tunnel, walkable and transparent
       // ' ' - solid stone, not walkable, not transparent.
-      // '|' - wall, not walkable, not transparent, but discoverable.'
+      // '|' - wall, not walkable, not transparent, but discoverable.
       //  others are treated the same as wall.
-      // tunnel, wall, and doorways are decor, once discovered they are visible.
+      // tunnel, wall, and doorways are decor; once discovered, they are visible.
 
       private void initMapTileSets(string map)
     {
@@ -144,11 +168,17 @@ public class Level : Scene {
                 _floor.Add(p);
                 _walkables.Add(p);
             }
+            else if (c == '#') 
+            {
+               _tunnel.Add(p);
+               _walkables.Add(p);
+               _decor.Add(p); 
+            }
             else if (c == '+')
             {
-                // newTile = new DoorTile(idCounter++); // You can create this class
+                newTile = new DoorTile(idCounter++); // You can create this class
                 _door.Add(p);
-                _walkables.Add(p);
+                _decor.Add(p);
             }
             else if (c == 'E') // Using 'E' for your ExitTile
             {
@@ -199,11 +229,11 @@ public class Level : Scene {
       RegisterCommand(ConsoleKey.S, "down");
       RegisterCommand(ConsoleKey.J, "down");
 
-      RegisterCommand(ConsoleKey.DownArrow, "left");
+      RegisterCommand(ConsoleKey.LeftArrow, "left");
       RegisterCommand(ConsoleKey.A, "left");
       RegisterCommand(ConsoleKey.H, "left");
 
-      RegisterCommand(ConsoleKey.DownArrow, "right");
+      RegisterCommand(ConsoleKey.RightArrow, "right");
       RegisterCommand(ConsoleKey.D, "right");
       RegisterCommand(ConsoleKey.L, "right");
 
@@ -211,25 +241,126 @@ public class Level : Scene {
    }
 
 
-    public void MovePlayer(Vector2 delta)
-    {
-        Vector2 newPos = _player!.Pos + delta;
-
-        if (_walkables.Contains(newPos))
-        {
-            _player.Pos = newPos;
-
-            // INTERHANCE IN ACTION: 
-            // Check if the tile the player stepped on has special logic
-            if (_tileRegistry.TryGetValue(newPos, out Tile steppingOn))
+   public void MovePlayer(Vector2 delta)
+   {
+      Vector2 newPos = _player!.Pos + delta;
+      
+      Enemy targetEnemy = _enemies.FirstOrDefault(e => e.Pos == newPos);
+      if (targetEnemy != null)
+      {
+         targetEnemy.TakeDamage(_player.AttackPower);
+         
+         if (targetEnemy.CurrentHealth > 0)
+         {
+            _player.TakeDamage(targetEnemy.AttackPower);
+            
+            if (_player.CurrentHealth <= 0)
             {
-                // If this is an ExitTile, this call will run the ExitTile's code!
-                steppingOn.SetTileSpace(1);
+               _levelActive = false;
             }
-
+         }
+         else 
+         {
+            _player.GetExp(targetEnemy.ExpValue);
+            _enemies.Remove(targetEnemy);
+            _player.Pos = newPos; 
+         }
+         
+         updateDiscovered();
+         return;
+      }
+      
+      if (_tileRegistry.TryGetValue(newPos, out Tile targetTile))
+      {
+         if (targetTile is DoorTile door && !door.IsOpen)
+         {
+            door.Open();
+            _walkables.Add(newPos);
             updateDiscovered();
-        }
-    }
+            return; 
+         }
+      }
+      
+      if (_walkables.Contains(newPos))
+      {
+         _player.Pos = newPos;
+         Item steppedOnItem = _items.FirstOrDefault(i => i.Pos == newPos);
+         
+         if (steppedOnItem != null)
+         {
+            steppedOnItem.ApplyTo(_player); 
+            
+            _items.Remove(steppedOnItem); 
+         }
+         
+         if (_tileRegistry.TryGetValue(newPos, out Tile steppingOn))
+         {
+            steppingOn.SetTileSpace(1); 
+         }
+
+         updateDiscovered();
+      }
+   }
+   
+   private void SpawnItems(int count)
+   {
+      Random rng = new Random();
+      
+      List<Vector2> validSpots = _floor.ToList(); 
+
+      for (int i = 0; i < count; i++)
+      {
+         if (validSpots.Count == 0) break;
+
+         int index = rng.Next(validSpots.Count);
+         Vector2 spawnPos = validSpots[index];
+         
+         validSpots.RemoveAt(index); 
+         
+         int roll = rng.Next(10);
+         
+         switch (roll)
+         {
+            case 0:
+               _items.Add(new Gold(i, spawnPos, rng.Next(10, 50))); 
+               break;
+            
+            case 1:
+               _items.Add(new Armour(i, spawnPos, rng.Next(1, 5))); 
+               break;
+            
+            case 2:
+               _items.Add(new Weapon(i, spawnPos, rng.Next(3, 10))); 
+               break;
+            
+            case 3:
+               _items.Add(new Potion(i, spawnPos, rng.Next(5, 10))); 
+               break;
+         }
+         
+      }
+   }
+   
+   private void SpawnEnemies(int count)
+   {
+      Random rng = new Random();
+      List<Vector2> validSpots = _floor.ToList(); 
+
+      for (int i = 0; i < count; i++)
+      {
+         if (validSpots.Count == 0) break;
+         int index = rng.Next(validSpots.Count);
+         Vector2 spawnPos = validSpots[index];
+         validSpots.RemoveAt(index); 
+
+         int typeRoll = rng.Next(3);
+         switch (typeRoll) {
+            case 0: _enemies.Add(new Goblin(i, spawnPos)); break;
+            case 1: _enemies.Add(new Troll(i, spawnPos)); break;
+            case 2: _enemies.Add(new Skeleton(i, spawnPos)); break;
+         }
+      }
+   }
 
     public void QuitLevel() {
       _levelActive = false;

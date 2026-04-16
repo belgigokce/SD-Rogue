@@ -1,5 +1,5 @@
 using RogueLib.Dungeon;
-using FilterSet = System.Collections.Generic.HashSet<RogueLib.Utilities.Vector2>;
+using FilterSet = System.Collections.Generic.HashSet<Vector2>;
 
 namespace RogueLib.Utilities;
 
