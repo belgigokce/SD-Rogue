@@ -700,6 +700,8 @@ fabric.properties
 
 # JetBrains Rider
 
+bin/
+
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
 
