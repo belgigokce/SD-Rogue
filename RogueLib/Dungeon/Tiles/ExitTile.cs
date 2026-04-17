@@ -1,16 +1,26 @@
-﻿using System.Collections.Generic;
-namespace RogueLib.Dungeon.Tiles
-{
-    public class ExitTile : Tile
-    {
-        public ExitTile(int id) : base(id)
-        {
-            IsWalkable = true; // You can always walk onto an exit
-        }
+﻿using System;
+using RogueLib.Dungeon;
+namespace RlGameNS;
 
-        public override void SetTileSpace(int tileSpace)
+public class ExitTile : Tile
+{
+
+    public ExitTile(int id) : base(id, 'E')
+    {
+
+        IsWalkable = true; // You can always walk onto an exit
+
+    }
+
+    public override void SetTileSpace(int tileSpace)
+    {
+        // tileSpace 1 is the signal from MovePlayer that someone stepped here
+        if (tileSpace == 1)
         {
-            // Implementation for ExitTile
+            Console.SetCursorPosition(0, 23);
+            Console.WriteLine("You've reached the stairs! Escaping...");
+
+
         }
     }
 }

@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using RogueLib.Utilities;
 
-namespace RogueLib.Dungeon.Tiles
+namespace RlGameNS
 {
     public class DoorTile : Tile
     {
         public bool IsOpen;
 
-        public DoorTile(int id) : base(id)
+        public DoorTile(int id) : base(id, '+')
         {
             IsOpen = false;
             IsWalkable = false; // Doors are usually closed blocks at first
@@ -22,11 +22,16 @@ namespace RogueLib.Dungeon.Tiles
         // Notice: We don't HAVE to write GetTileSpace here anymore!
         // DoorTile already knows how to do it because of the Tile class.
 
-        
+
         public override void SetTileSpace(int tileSpace)
         {
-            // This is the implementation specific to the Door!
-            // This is where you write the code for how a Door handles tileSpace.
+            // Logic: If tileSpace is 1 (the player "bumped" it), open the door!
+            if (tileSpace == 1 && !IsOpen)
+            {
+                IsOpen = true;
+                IsWalkable = true; // CRITICAL: Tell the engine we can walk here now!
+                System.Console.WriteLine("The door creaks open...");
+            }
         }
 
     }
