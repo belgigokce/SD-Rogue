@@ -3,6 +3,11 @@
 // and a utility functions for calculating distances, generate a sequence of 
 // all addresses in a grid. 
 // 
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
 public struct Vector2 : IEquatable<Vector2>, IComparable<Vector2> {
    public int X { get; }
    public int Y { get; }

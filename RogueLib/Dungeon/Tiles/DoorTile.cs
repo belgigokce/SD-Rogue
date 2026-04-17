@@ -30,7 +30,7 @@ namespace RlGameNS
             {
                 IsOpen = true;
                 IsWalkable = true; // CRITICAL: Tell the engine we can walk here now!
-                System.Console.WriteLine("The door creaks open...");
+                Console.Write('\r' + "The door creaks open...".PadRight(78));
             }
         }
 

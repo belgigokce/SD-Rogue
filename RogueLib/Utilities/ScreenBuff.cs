@@ -1,3 +1,4 @@
+using System;
 using RogueLib.Dungeon;
 using FilterSet = System.Collections.Generic.HashSet<Vector2>;
 

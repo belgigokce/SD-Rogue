@@ -266,11 +266,12 @@ public class Level : Scene
         Enemy targetEnemy = _enemies.FirstOrDefault(e => e.Pos == newPos);
         if (targetEnemy != null)
         {
+            Console.Write('\r' + targetEnemy.Speak().PadRight(78));
             targetEnemy.TakeDamage(_player.AttackPower);
 
             if (targetEnemy.CurrentHealth > 0)
             {
-                _player.TakeDamage(targetEnemy.AttackPower);
+                targetEnemy.AttackTarget(_player);
 
                 if (_player.CurrentHealth <= 0)
                 {

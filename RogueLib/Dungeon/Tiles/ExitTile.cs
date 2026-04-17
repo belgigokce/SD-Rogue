@@ -17,8 +17,8 @@ public class ExitTile : Tile
         // tileSpace 1 is the signal from MovePlayer that someone stepped here
         if (tileSpace == 1)
         {
-            Console.SetCursorPosition(0, 23);
-            Console.WriteLine("You've reached the stairs! Escaping...");
+            Console.SetCursorPosition(0, 25);
+            Console.Write('\r' + "You've reached the stairs! Escaping...".PadRight(78));
 
 
         }

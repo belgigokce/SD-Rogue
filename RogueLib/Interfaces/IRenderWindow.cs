@@ -1,3 +1,4 @@
+using System;
 using RogueLib.Utilities;
 using FilterSet = System.Collections.Generic.HashSet<Vector2>;
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace RogueLib.Utilities;
 
 public struct Rectangle {
