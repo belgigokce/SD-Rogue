@@ -14,7 +14,7 @@ public abstract class Scene : ICommandable, IDrawable {
 
    // fields -------------------------------------------------------
    protected Player? _player;             // reference back to the player
-   public    Game?   _game;               // reference back to the game
+   public    Game?   Game;               // reference back to the game
    protected bool    _levelActive = true; // currently active level
 
    // command system ------------------------------------------------

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using RogueLib.Dungeon;
 
@@ -57,7 +56,7 @@ public class Level : Scene
         _player = p;
         _player.Pos = new Vector2(4, 12); // random, or at stairs
         _map = map;
-        _game = game;
+        Game = game;
         Random rng = new Random();
 
         initMapTileSets(map);
@@ -104,7 +103,7 @@ public class Level : Scene
 
         var rng = new Random();
         if (_player.Turn % 5 == 0)
-            _player._color = (ConsoleColor)rng.Next(10, 16);
+            _player.Color = (ConsoleColor)rng.Next(10, 16);
         _player!.Draw(disp);
         // disp.Draw(_player!.Glyph, _player!.Pos, ConsoleColor.Cyan);
 
@@ -298,7 +297,7 @@ public class Level : Scene
             // IF IT'S AN EXIT: Switch levels immediately
             if (targetTile is ExitTile)
             {
-                if (_game is MyGame myGame)
+                if (Game is MyGame myGame)
                 {
                     myGame.NextLevel();
                     return; // Stop here, the new level is now loading!

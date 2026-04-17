@@ -39,6 +39,7 @@ public class MyGame : Game
         {
             // Clear the console entirely to remove the old map
             Console.Clear();
+            _window = new ScreenBuff(); // reset front buffer so full redraw happens
 
             // Reset player position so they aren't standing on the old 'E' spot
             _player.Pos = new Vector2(4, 12);

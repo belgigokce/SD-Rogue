@@ -1,19 +1,18 @@
 using RogueLib.Dungeon;
-using RogueLib.Utilities;
-using System;
 
-// Inheriting from Character is the "glue" that makes combat work
+namespace RogueLib.Utilities;
+
 public class Player : Character, IActor, IDrawable
 {
     public string Name { get; set; }
     public char Glyph => '@';
-    public ConsoleColor _color = ConsoleColor.White;
+    public ConsoleColor Color = ConsoleColor.White;
 
     protected int _level = 0;
     protected int _exp = 0;
     protected int _gold = 0;
     protected int _turn = 0;
-    protected int _maxStr = 16;
+    //protected int _maxStr = 16;
 
     public int Turn => _turn;
     public Inventory Inventory { get; }
@@ -36,7 +35,7 @@ public class Player : Character, IActor, IDrawable
 
     public virtual void Draw(IRenderWindow disp)
     {
-        disp.Draw(Glyph, Pos, _color);
+        disp.Draw(Glyph, Pos, Color);
     }
 
     public void AddGold(int amount)
