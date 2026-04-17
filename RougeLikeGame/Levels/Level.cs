@@ -365,7 +365,7 @@ public class Level : Scene
 
             validSpots.RemoveAt(index);
 
-            int roll = rng.Next(10);
+            int roll = rng.Next(3);
 
             switch (roll)
             {
