@@ -1,3 +1,4 @@
+using System;
 using RogueLib.Dungeon;
 
 namespace RogueLib.Utilities;
